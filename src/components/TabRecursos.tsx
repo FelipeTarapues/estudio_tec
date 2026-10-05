@@ -1,10 +1,11 @@
 "use client";
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { FORMULAS } from "@/lib/formulas";
 import { InversionChart } from "@/components/charts/InversionChart";
 import { Card, CardTitle, Input, SectionHeader, Button, fmtDec } from "@/components/ui";
-import type { CategoriaIntangible, CategoriaTangible } from "@/types";
+import type { CategoriaIntangible, CategoriaTangible, Tab } from "@/types";
 
 const CAT_T: { id: CategoriaTangible; label: string }[] = [
   { id: "maquinaria", label: "Maquinaria" },
@@ -36,6 +37,8 @@ export default function TabRecursos() {
     addRecursoIntangible,
     setTab,
   } = useStore();
+  const router = useRouter();
+  const go = (t: Tab) => { setTab(t); router.push(`/${t}`); };
 
   const totalT = sumBy(recursosTangibles);
   const totalI = sumBy(recursosIntangibles);
@@ -227,9 +230,9 @@ export default function TabRecursos() {
       </Card>
 
       <div className="flex gap-3 flex-wrap">
-        <Button variant="terra" onClick={() => setTab("resumen")}>Ver resumen de costos →</Button>
-        <Button variant="outline" onClick={() => setTab("nomina")}>Nómina</Button>
-        <Button variant="outline" onClick={() => setTab("empaque")}>← Empaque</Button>
+        <Button variant="terra" onClick={() => go("resumen")}>Ver resumen de costos →</Button>
+        <Button variant="outline" onClick={() => go("nomina")}>Nómina</Button>
+        <Button variant="outline" onClick={() => go("empaque")}>← Empaque</Button>
       </div>
     </div>
   );

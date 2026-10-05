@@ -94,7 +94,22 @@ export interface FichaTecnica {
   rotulado: string;
   lugarElaboracion: string;
   fechaElaboracion: string;
-  unidadVenta: string;
+  unidadVenta: string; // Removed hardcoded initialization
+}
+
+export interface ProyeccionData {
+  anos: number[];
+  estudiantes: string[];
+  inversiones: { concepto: string; valor: number }[];
+  capitalTrabajo: { mes: string; total: number; manoObra: number; gastosAdmin: number }[];
+  demanda: { ano: number; cantidad: number; ingreso: number; provision: number; credito: number; contado: number }[];
+  materiasPrimas: { nombre: string; gramos: number; costoProveedor: number; costoUnd: number }[];
+  costos: { ano: number; costoMpAnual: number; margenBrutoPct: number; pagoContadoMp: number; pagoCreditoMp: number; manoObraProduccionAnual: number }[];
+  cif: { ano: number; energiaElectrica: number; agua: number; total: number }[];
+  gastosAdmin: { ano: number; nominaAdministracion: number; publicidad: number; total: number }[];
+  resultados: Record<string, number>[];
+  flujoCaja: Record<string, number>[];
+  indicadores: { tasaInteresOportunidad: number; tir: number; vpn: number } | null;
 }
 
 export type Tab =

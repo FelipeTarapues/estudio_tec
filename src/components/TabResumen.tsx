@@ -1,5 +1,6 @@
 "use client";
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import {
   costoLineaEmpaque,
@@ -12,6 +13,7 @@ import { FORMULAS } from "@/lib/formulas";
 import { CostDonutChart } from "@/components/charts/CostDonutChart";
 import { InsumosBarChart } from "@/components/charts/InsumosBarChart";
 import { Card, CardTitle, Button, fmtDec, KpiCard, ChartLegend, SectionHeader } from "@/components/ui";
+import type { Tab } from "@/types";
 
 function etiquetaUnidad(unidadMasa: string): string {
   if (unidadMasa === "unidades") return "unidad";
@@ -24,6 +26,8 @@ export default function TabResumen() {
     nombreProducto, masaTotal, unidadMasa,
     materias, empaques, recursosTangibles, recursosIntangibles, setTab,
   } = useStore();
+  const router = useRouter();
+  const go = (t: Tab) => { setTab(t); router.push("/"+t); };
 
   const { fabricacion: costoFabricacion, embalaje: costoEmbalaje, total: costoTotal, porUnidad: costoPorUnidad } =
     costoTotalProducto(materias, empaques, masaTotal);
@@ -221,10 +225,10 @@ export default function TabResumen() {
 
       <div className="flex gap-3 flex-wrap no-print">
         <Button variant="terra" onClick={() => window.print()}>Imprimir / PDF</Button>
-        <Button variant="outline" onClick={() => setTab("recursos")}>Recursos</Button>
-        <Button variant="outline" onClick={() => setTab("nomina")}>Nómina</Button>
-        <Button variant="outline" onClick={() => setTab("proyecciones")}>Proyecciones</Button>
-        <Button variant="ghost" onClick={() => setTab("materias")}>← Materias</Button>
+        <Button variant="outline" onClick={() => go("recursos")}>Recursos</Button>
+        <Button variant="outline" onClick={() => go("nomina")}>Nómina</Button>
+        <Button variant="outline" onClick={() => go("proyecciones")}>Proyecciones</Button>
+        <Button variant="ghost" onClick={() => go("materias")}>← Materias</Button>
       </div>
     </div>
   );

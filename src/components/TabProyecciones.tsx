@@ -1,33 +1,17 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
-import {
-  CAPITAL_TRABAJO,
-  CIF,
-  COSTOS_MP_ANUAL,
-  DEMANDA,
-  ESTADO_RESULTADOS,
-  FLUJO_CAJA,
-  GASTOS_ADMIN,
-  INDICADORES,
-  INVERSIONES,
-  MANO_OBRA_PRODUCCION_ANUAL,
-  MARGEN_BRUTO_PCT,
-  MATERIA_PRIMA_PROY,
-  PAGO_CONTADO_MP,
-  PAGO_CREDITO_MP,
-  PROYECCION_ANOS,
-  PROYECCION_META,
-} from "@/data/proyeccionesSeed";
+import type { Tab } from "@/types";
 import { FORMULAS } from "@/lib/formulas";
 import { FormulaTip } from "@/components/FormulaTip";
 import { Card, CardTitle, SectionHeader, Button, KpiCard, fmt, fmtDec } from "@/components/ui";
 
-function AnosHeader() {
+function AnosHeader({ anos }: { anos: number[] }) {
   return (
     <>
-      {PROYECCION_ANOS.map((y) => (
+      {anos.map((y) => (
         <th
           key={y}
           className="text-right py-2 px-2 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"
@@ -65,8 +49,8 @@ function FilaAnual({
       }}
     >
       <td
-        className="py-2 px-3 text-sm sticky left-0 z-10"
-        style={{ color: "var(--ink)", minWidth: 220, background: destacar ? "#FFF8F4" : "var(--surface)" }}
+        className="py-2 px-3 text-sm sticky left-0 z-10 min-w-[180px] sm:min-w-[220px]"
+        style={{ color: "var(--ink)", background: destacar ? "#FFF8F4" : "var(--surface)" }}
       >
         <span className="inline-flex items-center gap-1 flex-wrap">
           {label}
@@ -91,26 +75,28 @@ function FilaAnual({
 function TablaAnual({
   titulo,
   formula,
+  anos,
   children,
 }: {
   titulo: string;
   formula?: string;
+  anos: number[];
   children: ReactNode;
 }) {
   return (
     <Card>
       <CardTitle formula={formula}>{titulo}</CardTitle>
       <div className="overflow-x-auto -mx-1 rounded-xl border" style={{ borderColor: "var(--border)" }}>
-        <table className="w-full text-sm min-w-[720px]">
+        <table className="w-full text-sm min-w-[620px] sm:min-w-[720px]">
           <thead>
             <tr className="border-b" style={{ borderColor: "var(--border)", background: "var(--cream)" }}>
               <th
-                className="text-left py-3 px-3 text-[10px] font-bold uppercase tracking-wider sticky left-0 z-10"
-                style={{ color: "var(--muted)", minWidth: 220, background: "var(--cream)" }}
+                className="text-left py-3 px-3 text-[10px] font-bold uppercase tracking-wider sticky left-0 z-10 min-w-[180px] sm:min-w-[220px]"
+                style={{ color: "var(--muted)", background: "var(--cream)" }}
               >
                 Concepto
               </th>
-              <AnosHeader />
+              <AnosHeader anos={anos} />
             </tr>
           </thead>
           <tbody>{children}</tbody>
@@ -121,9 +107,28 @@ function TablaAnual({
 }
 
 export default function TabProyecciones() {
-  const { nombreProducto, fichaTecnica, setTab } = useStore();
-  const producto = nombreProducto || PROYECCION_META.producto;
-  const empresa = fichaTecnica.fabricante || PROYECCION_META.empresa;
+  const { nombreProducto, fichaTecnica, setTab, proyecciones } = useStore();
+  const router = useRouter();
+  const go = (t: Tab) => { setTab(t); router.push("/"+t); };
+  const PROYECCION_ANOS = proyecciones.anos;
+  const producto = nombreProducto;
+  const empresa = fichaTecnica.fabricante;
+  const PROYECCION_META = { estudiantes: proyecciones.estudiantes };
+  const INVERSIONES = { total: proyecciones.inversiones.reduce((sum, item) => sum + Number(item.valor), 0), lineas: proyecciones.inversiones };
+  const CAPITAL_TRABAJO = { meses: proyecciones.capitalTrabajo };
+  const DEMANDA = { precioVenta: proyecciones.demanda[0]?.ingreso / (proyecciones.demanda[0]?.cantidad || 1) || 0, provisionDeudasMalas: 0.03, ventasCredito: 0.4, ventasContado: 0.6, porAno: proyecciones.demanda };
+  const MATERIA_PRIMA_PROY = proyecciones.materiasPrimas;
+  const COSTOS_MP_ANUAL = Number(proyecciones.costos[0]?.costoMpAnual) || 0;
+  const MARGEN_BRUTO_PCT = proyecciones.costos.map((item) => Number(item.margenBrutoPct) || 0);
+  const PAGO_CONTADO_MP = Number(proyecciones.costos[0]?.pagoContadoMp) || 0;
+  const PAGO_CREDITO_MP = Number(proyecciones.costos[0]?.pagoCreditoMp) || 0;
+  const CIF = { lineas: [{ concepto: "Energía eléctrica", valores: proyecciones.cif.map((item) => Number(item.energiaElectrica) || 0) }, { concepto: "Agua", valores: proyecciones.cif.map((item) => Number(item.agua) || 0) }], totales: proyecciones.cif.map((item) => Number(item.total) || 0) };
+  const GASTOS_ADMIN = { lineas: [{ concepto: "Nómina administración", valores: proyecciones.gastosAdmin.map((item) => Number(item.nominaAdministracion) || 0) }, { concepto: "Publicidad", valores: proyecciones.gastosAdmin.map((item) => Number(item.publicidad) || 0) }], totales: proyecciones.gastosAdmin.map((item) => Number(item.total) || 0) };
+  const resultValues = (key: string) => proyecciones.resultados.map((row) => Number(row[key] || 0));
+  const cashValues = (key: string) => proyecciones.flujoCaja.map((row) => Number(row[key] || 0));
+  const ESTADO_RESULTADOS = { ventas: resultValues("ventas"), costoMercancia: resultValues("costoMercancia"), utilidadBruta: resultValues("utilidadBruta"), gastosAdminVentas: resultValues("gastosAdminVentas"), provisionDeudas: resultValues("provisionDeudas"), utilidadAntesImpuestos: resultValues("utilidadAntesImpuestos"), impuestoRenta: resultValues("impuestoRenta"), utilidadNeta: resultValues("utilidadNeta"), reservaLegal: resultValues("reservaLegal"), dividendos: resultValues("dividendos"), utilidadNetaFinal: resultValues("utilidadNetaFinal") };
+  const FLUJO_CAJA = { ventasContado: cashValues("ventasContado"), totalIngresos: cashValues("totalIngresos"), pagoMpContado: cashValues("pagoMpContado"), manoObra: cashValues("manoObra"), cif: cashValues("cif"), gastosAdmin: cashValues("gastosAdmin"), impuestoRenta: cashValues("impuestoRenta"), totalEgresos: cashValues("totalEgresos"), efectivoGenerado: cashValues("efectivoGenerado"), inversionInicial: cashValues("inversionInicial")[0] || 0 };
+  const INDICADORES = proyecciones.indicadores || { tir: 0, tasaInteresOportunidad: 0, vpn: 0 };
 
   return (
     <div className="animate-fade-up">
@@ -132,7 +137,7 @@ export default function TabProyecciones() {
         sub={`Plan de negocio · ${empresa} · ${producto} · Horizonte ${PROYECCION_ANOS[0]}–${PROYECCION_ANOS[PROYECCION_ANOS.length - 1]}. Use el icono ? para ver cada fórmula.`}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <KpiCard
           label="Inversión total"
           value={`$${fmt(INVERSIONES.total)}`}
@@ -161,7 +166,7 @@ export default function TabProyecciones() {
 
       <Card>
         <CardTitle>Datos del proyecto</CardTitle>
-        <dl className="grid sm:grid-cols-2 gap-3 text-sm">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-xs uppercase tracking-wide font-semibold" style={{ color: "var(--muted)" }}>Empresa</dt>
             <dd className="font-medium mt-0.5">{empresa}</dd>
@@ -177,31 +182,33 @@ export default function TabProyecciones() {
         </dl>
       </Card>
 
-      <div className="grid sm:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
         <Card>
           <CardTitle formula={FORMULAS.proyInversionTotal}>Inversiones</CardTitle>
-          <table className="w-full text-sm">
-            <tbody>
-              {INVERSIONES.lineas.map((l) => (
-                <tr key={l.concepto} className="border-b" style={{ borderColor: "var(--border)" }}>
-                  <td className="py-2 pr-3">{l.concepto}</td>
-                  <td className="py-2 text-right font-medium tabular-nums">${fmt(l.valor)}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[260px]">
+              <tbody>
+                {INVERSIONES.lineas.map((l) => (
+                  <tr key={l.concepto} className="border-b" style={{ borderColor: "var(--border)" }}>
+                    <td className="py-2 pr-3">{l.concepto}</td>
+                    <td className="py-2 text-right font-medium tabular-nums">${fmt(l.valor)}</td>
+                  </tr>
+                ))}
+                <tr style={{ background: "rgba(196, 113, 74, 0.08)" }}>
+                  <td className="py-2.5 font-bold" style={{ color: "var(--terra)" }}>Total inversiones</td>
+                  <td className="py-2.5 text-right font-bold tabular-nums" style={{ color: "var(--terra)" }}>
+                    ${fmt(INVERSIONES.total)}
+                  </td>
                 </tr>
-              ))}
-              <tr style={{ background: "rgba(196, 113, 74, 0.08)" }}>
-                <td className="py-2.5 font-bold" style={{ color: "var(--terra)" }}>Total inversiones</td>
-                <td className="py-2.5 text-right font-bold tabular-nums" style={{ color: "var(--terra)" }}>
-                  ${fmt(INVERSIONES.total)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </Card>
 
         <Card>
           <CardTitle formula={FORMULAS.proyCapitalTrabajo}>Capital de trabajo (primeros 3 meses)</CardTitle>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[340px]">
               <thead>
                 <tr className="border-b" style={{ borderColor: "var(--border)" }}>
                   {["Mes", "Total", "Mano de obra", "Gastos admin."].map((h) => (
@@ -226,7 +233,7 @@ export default function TabProyecciones() {
         </Card>
       </div>
 
-      <TablaAnual titulo="Proyección de demanda e ingresos" formula={FORMULAS.proyTotalIngreso}>
+      <TablaAnual anos={PROYECCION_ANOS} titulo="Proyección de demanda e ingresos" formula={FORMULAS.proyTotalIngreso}>
         <FilaAnual
           label="Cantidad (unidades)"
           valores={DEMANDA.porAno.map((d) => d.cantidad)}
@@ -234,7 +241,7 @@ export default function TabProyecciones() {
           formato="numero"
         />
         <tr className="border-b" style={{ borderColor: "var(--border)" }}>
-          <td className="py-2 px-3 text-sm sticky left-0 bg-white z-10" style={{ minWidth: 220 }}>
+          <td className="py-2 px-3 text-sm sticky left-0 z-10 min-w-[180px] sm:min-w-[220px]" style={{ background: "var(--surface)" }}>
             <span className="inline-flex items-center gap-1">
               Precio de venta
               <FormulaTip formula="Precio unitario constante en la plantilla (ej. $7.000 por unidad)." title="Precio" />
@@ -274,11 +281,11 @@ export default function TabProyecciones() {
       <Card>
         <CardTitle formula={FORMULAS.proyCostoMpUnd}>Costo — materia prima (por lote / año 1)</CardTitle>
         <div className="overflow-x-auto rounded-xl border" style={{ borderColor: "var(--border)" }}>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[420px]">
             <thead>
               <tr style={{ background: "var(--cream)" }}>
                 {["Materia prima", "g/ml", "Costo proveedor", "Costo UND"].map((h) => (
-                  <th key={h} className="text-left py-3 px-3 text-[10px] font-bold uppercase" style={{ color: "var(--muted)" }}>
+                  <th key={h} className="text-left py-3 px-3 text-[10px] font-bold uppercase whitespace-nowrap" style={{ color: "var(--muted)" }}>
                     {h}
                   </th>
                 ))}
@@ -315,26 +322,26 @@ export default function TabProyecciones() {
         </p>
       </Card>
 
-      <TablaAnual titulo="Costos indirectos de fabricación (CIF)" formula={FORMULAS.proyCif}>
+      <TablaAnual anos={PROYECCION_ANOS} titulo="Costos indirectos de fabricación (CIF)" formula={FORMULAS.proyCif}>
         {CIF.lineas.map((l) => (
           <FilaAnual key={l.concepto} label={l.concepto} valores={l.valores} />
         ))}
         <FilaAnual label="Total CIF" valores={CIF.totales} destacar />
         <FilaAnual
           label="Mano de obra producción"
-          valores={PROYECCION_ANOS.map(() => MANO_OBRA_PRODUCCION_ANUAL)}
+          valores={proyecciones.costos.map((item) => item.manoObraProduccionAnual)}
           formula="Costo anual de mano de obra directa en planta (dato de la plantilla de proyección)."
         />
       </TablaAnual>
 
-      <TablaAnual titulo="Gastos de administración y ventas" formula={FORMULAS.proyGastosAdmin}>
+      <TablaAnual anos={PROYECCION_ANOS} titulo="Gastos de administración y ventas" formula={FORMULAS.proyGastosAdmin}>
         {GASTOS_ADMIN.lineas.map((l) => (
           <FilaAnual key={l.concepto} label={l.concepto} valores={l.valores} />
         ))}
         <FilaAnual label="Total" valores={GASTOS_ADMIN.totales} destacar />
       </TablaAnual>
 
-      <TablaAnual titulo="Estado de resultados — pérdidas y ganancias" formula={FORMULAS.proyUai}>
+      <TablaAnual anos={PROYECCION_ANOS} titulo="Estado de resultados — pérdidas y ganancias" formula={FORMULAS.proyUai}>
         <FilaAnual label="Ventas" valores={ESTADO_RESULTADOS.ventas} formula={FORMULAS.proyTotalIngreso} />
         <FilaAnual
           label="(−) Costo mercancía vendida"
@@ -392,7 +399,7 @@ export default function TabProyecciones() {
         />
       </TablaAnual>
 
-      <TablaAnual titulo="Proyección flujo de caja" formula={FORMULAS.proyEfectivoGenerado}>
+      <TablaAnual anos={PROYECCION_ANOS} titulo="Proyección flujo de caja" formula={FORMULAS.proyEfectivoGenerado}>
         <FilaAnual
           label="Ventas de contado"
           valores={FLUJO_CAJA.ventasContado}
@@ -470,10 +477,10 @@ export default function TabProyecciones() {
         <Button variant="terra" onClick={() => window.print()}>
           Imprimir / PDF
         </Button>
-        <Button variant="outline" onClick={() => setTab("resumen")}>
+        <Button variant="outline" onClick={() => go("resumen")}>
           Resumen de costos
         </Button>
-        <Button variant="outline" onClick={() => setTab("nomina")}>
+        <Button variant="outline" onClick={() => go("nomina")}>
           Nómina
         </Button>
       </div>

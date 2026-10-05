@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { Card, CardTitle, Input, SectionHeader, Button, FieldLabel, fmtDec } from "@/components/ui";
 import {
@@ -13,7 +14,7 @@ import {
 } from "@/lib/nomina";
 import { FORMULAS } from "@/lib/formulas";
 import { NominaStackChart } from "@/components/charts/NominaStackChart";
-import type { EmpleadoNomina } from "@/types";
+import type { Tab, EmpleadoNomina } from "@/types";
 
 function num(v: string) {
   const n = parseFloat(v);
@@ -30,6 +31,8 @@ export default function TabNomina() {
     addEmpleadoNomina,
     setTab,
   } = useStore();
+  const router = useRouter();
+  const go = (t: Tab) => { setTab(t); router.push("/"+t); };
 
   const p = parametrosNomina;
 
@@ -46,17 +49,17 @@ export default function TabNomina() {
     let ret = 0;
     let otras = 0;
     for (const e of empleadosNomina) {
-      td += totalDevengado(e, p);
-      salud += saludEmpleado(e, p);
-      pension += pensionEmpleado(e, p);
-      neto += netoPagado(e, p);
-      fondo += e.fondoSolidaridad;
-      ret += e.retencionFuente;
-      otras += e.otrasDeducciones;
-      sena += e.sena ?? 0;
-      icbf += e.icbf ?? 0;
-      caja += e.cajaCompensacion ?? 0;
-      saludEmp += e.aporteSaludEmpleador ?? 0;
+      td += Number(totalDevengado(e as any, p as any)) || 0;
+      salud += Number(saludEmpleado(e as any, p as any)) || 0;
+      pension += Number(pensionEmpleado(e as any, p as any)) || 0;
+      neto += Number(netoPagado(e as any, p as any)) || 0;
+      fondo += Number(e.fondoSolidaridad) || 0;
+      ret += Number(e.retencionFuente) || 0;
+      otras += Number(e.otrasDeducciones) || 0;
+      sena += Number(e.sena) || 0;
+      icbf += Number(e.icbf) || 0;
+      caja += Number(e.cajaCompensacion) || 0;
+      saludEmp += Number(e.aporteSaludEmpleador) || 0;
     }
     return { td, salud, pension, neto, sena, icbf, caja, saludEmp, fondo, ret, otras };
   }, [empleadosNomina, p]);
@@ -65,14 +68,14 @@ export default function TabNomina() {
     () =>
       empleadosNomina.map((e) => ({
         nombre: e.rol,
-        devengado: totalDevengado(e, p),
+        devengado: Number(totalDevengado(e as any, p as any)) || 0,
         deducciones:
-          saludEmpleado(e, p) +
-          pensionEmpleado(e, p) +
-          e.fondoSolidaridad +
-          e.retencionFuente +
-          e.otrasDeducciones,
-        neto: netoPagado(e, p),
+          (Number(saludEmpleado(e as any, p as any)) || 0) +
+          (Number(pensionEmpleado(e as any, p as any)) || 0) +
+          (Number(e.fondoSolidaridad) || 0) +
+          (Number(e.retencionFuente) || 0) +
+          (Number(e.otrasDeducciones) || 0),
+        neto: Number(netoPagado(e as any, p as any)) || 0,
       })),
     [empleadosNomina, p],
   );
@@ -242,8 +245,8 @@ export default function TabNomina() {
       </Card>
 
       <div className="flex gap-3 flex-wrap">
-        <Button variant="terra" onClick={() => setTab("resumen")}>Ir a resumen →</Button>
-        <Button variant="outline" onClick={() => setTab("recursos")}>← Recursos</Button>
+        <Button variant="terra" onClick={() => go("resumen")}>Ir a resumen →</Button>
+        <Button variant="outline" onClick={() => go("recursos")}>← Recursos</Button>
       </div>
     </div>
   );
@@ -260,11 +263,11 @@ function FilaNomina({
   onChange: (id: string, key: keyof EmpleadoNomina, value: string | number | boolean) => void;
   onRemove: () => void;
 }) {
-  const td = totalDevengado(e, p);
-  const s = saludEmpleado(e, p);
-  const pen = pensionEmpleado(e, p);
-  const net = netoPagado(e, p);
-  const paraf = [e.sena, e.icbf, e.cajaCompensacion].some((x) => x != null && x > 0);
+  const td = Number(totalDevengado(e as any, p as any)) || 0;
+  const s = Number(saludEmpleado(e as any, p as any)) || 0;
+  const pen = Number(pensionEmpleado(e as any, p as any)) || 0;
+  const net = Number(netoPagado(e as any, p as any)) || 0;
+  const paraf = [e.sena, e.icbf, e.cajaCompensacion].some((x) => Number(x) > 0);
 
   return (
     <tr className="border-b align-top" style={{ borderColor: "var(--border)" }}>

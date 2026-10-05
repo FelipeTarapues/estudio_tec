@@ -12,7 +12,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`p-6 mb-5 ${glass ? "glass-card" : "rounded-xl border bg-white"} ${className}`}
+      className={`p-4 sm:p-6 mb-5 ${glass ? "glass-card" : "rounded-xl border bg-white"} ${className}`}
       style={glass ? undefined : { borderColor: "var(--border)" }}
     >
       {children}
@@ -75,18 +75,22 @@ export function KpiCard({
   formula?: string;
 }) {
   return (
-    <div className="kpi-card p-5 relative overflow-visible" style={{ background: bg, borderColor: `${accent}33` }}>
-      <div className="absolute top-0 left-0 w-1 h-full rounded-full" style={{ background: accent }} />
-      <div className="flex items-start justify-between gap-2 pl-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>
+    <div className="kpi-card p-4 sm:p-5 relative overflow-hidden" style={{ background: bg, borderColor: `${accent}33` }}>
+      <div className="absolute top-0 left-0 w-1.5 h-full rounded-l-2xl" style={{ background: accent }} />
+      <div className="flex items-start justify-between gap-1 sm:gap-2 pl-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.14em] truncate" style={{ color: accent }}>
           {label}
         </p>
         {formula && <FormulaTip formula={formula} />}
       </div>
-      <p className="font-serif text-3xl sm:text-4xl leading-none my-2 pl-2" style={{ color: "var(--ink)" }}>
+      <p
+        className="font-serif text-xl sm:text-2xl lg:text-3xl xl:text-4xl leading-tight my-1.5 sm:my-2 pl-2 tracking-tight tabular-nums truncate"
+        style={{ color: "var(--ink)" }}
+        title={value}
+      >
         {value}
       </p>
-      <p className="text-xs pl-2" style={{ color: "var(--muted)" }}>
+      <p className="text-xs pl-2 truncate" style={{ color: "var(--muted)" }} title={sub}>
         {sub}
       </p>
     </div>
@@ -254,11 +258,11 @@ export function Button({
 
 export function SectionHeader({ title, sub }: { title: string; sub: string }) {
   return (
-    <div className="mb-8 animate-fade-up">
-      <h2 className="font-serif text-3xl sm:text-4xl mb-2 tracking-tight" style={{ color: "var(--ink)" }}>
+    <div className="mb-6 sm:mb-8 animate-fade-up">
+      <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl mb-2 tracking-tight" style={{ color: "var(--ink)" }}>
         {title}
       </h2>
-      <p className="text-sm max-w-2xl leading-relaxed" style={{ color: "var(--muted)" }}>
+      <p className="text-xs sm:text-sm max-w-2xl leading-relaxed" style={{ color: "var(--muted)" }}>
         {sub}
       </p>
     </div>

@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import {
   costoEmbalaje,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/costos";
 import { FORMULAS } from "@/lib/formulas";
 import { Card, CardTitle, Input, SectionHeader, Button, Select, fmtDec } from "@/components/ui";
+import type { Tab } from "@/types";
 
 const UNIDADES = [
   { value: "Unidad",     label: "Unidad" },
@@ -29,6 +31,8 @@ function syncCostoUnitario(
 
 export default function TabEmpaque() {
   const { empaques, masaTotal, addEmpaque, updateEmpaque, removeEmpaque, setTab } = useStore();
+  const router = useRouter();
+  const go = (t: Tab) => { setTab(t); router.push(`/${t}`); };
 
   const totalEmbalaje = costoEmbalaje(empaques, masaTotal);
 
@@ -130,7 +134,7 @@ export default function TabEmpaque() {
 
         <div className="flex gap-3 mt-4 flex-wrap">
           <Button variant="outline" onClick={addEmpaque}>+ Agregar Material</Button>
-          <Button variant="forest" onClick={() => setTab("resumen")}>Ver Resumen de Costos →</Button>
+          <Button variant="forest" onClick={() => go("resumen")}>Ver Resumen de Costos →</Button>
         </div>
       </Card>
     </div>

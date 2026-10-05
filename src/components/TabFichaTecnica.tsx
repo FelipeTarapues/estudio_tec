@@ -1,8 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { Card, CardTitle, Button, FieldLabel, Input, Textarea, SectionHeader } from "@/components/ui";
-import type { FichaTecnica } from "@/types";
+import type { FichaTecnica, Tab } from "@/types";
 
 const CAMPOS_CORTOS: { key: keyof FichaTecnica; label: string }[] = [
   { key: "producto", label: "Producto" },
@@ -37,6 +38,8 @@ const PIE: { key: keyof FichaTecnica; label: string }[] = [
 
 export default function TabFichaTecnica() {
   const { fichaTecnica, updateFichaTecnica, setTab } = useStore();
+  const router = useRouter();
+  const go = (t: Tab) => { setTab(t); router.push(`/${t}`); };
 
   const setField = (key: keyof FichaTecnica, value: string) => updateFichaTecnica(key, value);
 
@@ -113,7 +116,7 @@ export default function TabFichaTecnica() {
 
       <div className="flex gap-3 flex-wrap no-print">
         <Button variant="terra" onClick={() => window.print()}>Imprimir / PDF</Button>
-        <Button variant="outline" onClick={() => setTab("materias")}>Materias primas →</Button>
+        <Button variant="outline" onClick={() => go("materias")}>Materias primas →</Button>
       </div>
     </div>
   );

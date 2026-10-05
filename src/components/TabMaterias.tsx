@@ -1,8 +1,10 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { costoFabricacion, costoLineaMateria } from "@/lib/costos";
 import { FORMULAS } from "@/lib/formulas";
 import { Card, CardTitle, Input, SectionHeader, Button, FieldLabel, Select, fmtDec } from "@/components/ui";
+import type { Tab } from "@/types";
 
 const UNIDADES = [
   { value: "Litros",     label: "Litros" },
@@ -19,6 +21,8 @@ export default function TabMaterias() {
     materias, densidadLeche, densidadCrema,
     setField, addMateria, updateMateria, removeMateria, setTab,
   } = useStore();
+  const router = useRouter();
+  const go = (t: Tab) => { setTab(t); router.push(`/${t}`); };
 
   const totalFabricacion = costoFabricacion(materias);
 
@@ -157,7 +161,7 @@ export default function TabMaterias() {
 
         <div className="flex gap-3 mt-4 flex-wrap">
           <Button variant="outline" onClick={addMateria}>+ Agregar Materia Prima</Button>
-          <Button variant="forest" onClick={() => setTab("empaque")}>Siguiente → Empaque ›</Button>
+          <Button variant="forest" onClick={() => go("empaque")}>Siguiente → Empaque ›</Button>
         </div>
       </Card>
     </div>
