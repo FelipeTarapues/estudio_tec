@@ -4,46 +4,51 @@ const DIAS_MES_LABORAL = 30;
 
 /** Salario proporcional a los días liquidados (base 30 días). */
 export function salarioDevengadoCalculado(e: EmpleadoNomina): number {
-  if (e.diasLiquidados <= 0) return 0;
-  return (e.salarioBasico / DIAS_MES_LABORAL) * e.diasLiquidados;
+  const dias = Number(e.diasLiquidados) || 0;
+  const basico = Number(e.salarioBasico) || 0;
+  if (dias <= 0) return 0;
+  return (basico / DIAS_MES_LABORAL) * dias;
 }
 
 /** Base de cotización (sin auxilio de transporte): salud y pensión en Colombia. */
 export function baseCotizacion(e: EmpleadoNomina): number {
   return (
     salarioDevengadoCalculado(e) +
-    e.horasExtras +
-    e.recargosNocturnos +
-    e.domFestivo
+    (Number(e.horasExtras) || 0) +
+    (Number(e.recargosNocturnos) || 0) +
+    (Number(e.domFestivo) || 0)
   );
 }
 
 export function saludEmpleado(e: EmpleadoNomina, p: ParametrosNomina): number {
-  return baseCotizacion(e) * p.porcentajeSalud;
+  return baseCotizacion(e) * (Number(p.porcentajeSalud) || 0);
 }
 
 export function pensionEmpleado(e: EmpleadoNomina, p: ParametrosNomina): number {
-  return baseCotizacion(e) * p.porcentajePension;
+  return baseCotizacion(e) * (Number(p.porcentajePension) || 0);
 }
 
 export function auxilioEfectivo(
   e: EmpleadoNomina,
   p: ParametrosNomina,
 ): number {
+  const smmlv = Number(p.salarioMinimoLegal) || 0;
+  const aux = Number(p.auxilioTransporte) || 0;
+  const basico = Number(e.salarioBasico) || 0;
   if (e.auxilioTransporteAuto) {
-    const tope = 2 * p.salarioMinimoLegal;
-    return e.salarioBasico <= tope ? p.auxilioTransporte : 0;
+    const tope = 2 * smmlv;
+    return basico <= tope ? aux : 0;
   }
-  return e.auxilioTransporteManual;
+  return Number(e.auxilioTransporteManual) || 0;
 }
 
 export function totalDevengado(e: EmpleadoNomina, p: ParametrosNomina): number {
   const aux = auxilioEfectivo(e, p);
   return (
     salarioDevengadoCalculado(e) +
-    e.horasExtras +
-    e.recargosNocturnos +
-    e.domFestivo +
+    (Number(e.horasExtras) || 0) +
+    (Number(e.recargosNocturnos) || 0) +
+    (Number(e.domFestivo) || 0) +
     aux
   );
 }
@@ -54,8 +59,8 @@ export function netoPagado(e: EmpleadoNomina, p: ParametrosNomina): number {
     t -
     saludEmpleado(e, p) -
     pensionEmpleado(e, p) -
-    e.fondoSolidaridad -
-    e.retencionFuente -
-    e.otrasDeducciones
+    (Number(e.fondoSolidaridad) || 0) -
+    (Number(e.retencionFuente) || 0) -
+    (Number(e.otrasDeducciones) || 0)
   );
 }
